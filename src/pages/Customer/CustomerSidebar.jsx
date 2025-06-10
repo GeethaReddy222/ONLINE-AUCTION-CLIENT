@@ -66,20 +66,9 @@ const CustomerSidebar = () => {
           {!collapsed && <span>Profile</span>}
         </NavLink>
 
-        <NavLink
-          to="/customer/pending-products"
-          className={({ isActive }) =>
-            `flex items-center px-6 py-4 transition-colors group ${
-              isActive ? 'bg-[#d4af37] text-white font-semibold' : 'hover:bg-[#2d3748]'
-            }`
-          }
-        >
-          <FaEdit className={`text-xl ${collapsed ? 'mx-auto' : 'mr-4'}`} />
-          {!collapsed && <span>Update Profile</span>}
-        </NavLink>
 
         <NavLink
-          to="/customer/browse-products"
+          to="/product/active-products"
           className={({ isActive }) =>
             `flex items-center px-6 py-4 transition-colors group ${
               isActive ? 'bg-[#d4af37] text-white font-semibold' : 'hover:bg-[#2d3748]'

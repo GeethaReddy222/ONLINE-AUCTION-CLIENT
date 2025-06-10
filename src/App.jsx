@@ -14,12 +14,11 @@ import AdminDashboard from './pages/Admin/AdminDashboard.jsx';
 import AdminProfile from './pages/Admin/AdminProfile.jsx';
 import PendingApprovals from './pages/Admin/PendingApprovals.jsx';
 import ActiveProducts from './pages/Admin/ActiveProducts';
-
+import ProductDetail from './pages/Admin/ProductDetail';
 // Customer
 import CustomerRegister from './pages/Customer/CustomerRegister.jsx';
 import CustomerDashboard from './pages/Customer/CustomerDashboard.jsx';
 import CustomerProfile from './pages/Customer/CustomerProfile.jsx';
-import CustomerUpdateProfile from './pages/Customer/CustomerUpdateProfile.jsx';
 import AddProduct from './pages/Customer/AddProducts.jsx';
 import MyProducts from './pages/Customer/MyProducts.jsx';
 import MyBidProducts from './pages/Customer/MyBidProducts.jsx';
@@ -52,11 +51,11 @@ const App = () => {
           <Route path="/admin/profile" element={<AdminProfile />} />
           <Route path="/admin/pending-approvals" element={<PendingApprovals />} />
           <Route path="/product/active-products" element={<ActiveProducts />} />
+          <Route path="/product/:productId" element={<ProductDetail />} />
 
           {/* Customer Routes */}
           <Route path="/customer-dashboard" element={<CustomerDashboard />} />
           <Route path="/customer/profile" element={<CustomerProfile />} />
-          <Route path="/customer/update-profile" element={<CustomerUpdateProfile />} />
           <Route path="/customer/add-product" element={<AddProduct />} />
           <Route path="/customer/my-products" element={<MyProducts />} />
           <Route path="/customer/my-bidded-products" element={<MyBidProducts />} />
