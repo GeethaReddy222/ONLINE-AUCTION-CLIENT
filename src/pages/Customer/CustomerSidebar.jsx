@@ -68,7 +68,7 @@ const CustomerSidebar = () => {
 
 
         <NavLink
-          to="/product/active-products"
+          to="/customer/browse-products"
           className={({ isActive }) =>
             `flex items-center px-6 py-4 transition-colors group ${
               isActive ? 'bg-[#d4af37] text-white font-semibold' : 'hover:bg-[#2d3748]'

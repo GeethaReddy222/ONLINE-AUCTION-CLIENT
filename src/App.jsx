@@ -22,6 +22,8 @@ import CustomerProfile from './pages/Customer/CustomerProfile.jsx';
 import AddProduct from './pages/Customer/AddProducts.jsx';
 import MyProducts from './pages/Customer/MyProducts.jsx';
 import MyBidProducts from './pages/Customer/MyBidProducts.jsx';
+import BrowseProducts from './pages/Customer/BrowseProducts.jsx';
+import ProductDetails from './pages/Customer/ProductDetails';
 
 const App = () => {
   const location = useLocation();
@@ -59,6 +61,8 @@ const App = () => {
           <Route path="/customer/add-product" element={<AddProduct />} />
           <Route path="/customer/my-products" element={<MyProducts />} />
           <Route path="/customer/my-bidded-products" element={<MyBidProducts />} />
+          <Route path="/customer/browse-products" element={<BrowseProducts />} />
+          <Route path="/customer/:productId" element={<ProductDetails />} />
          
         </Routes>
       </main>

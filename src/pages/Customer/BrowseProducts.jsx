@@ -1,19 +1,14 @@
-// src/pages/ActiveProducts.js
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   FaSearch, 
   FaFilter, 
-  FaStar, 
-  FaHeart, 
-  FaEye,
-  FaUser,
   FaTag    
 } from 'react-icons/fa';
 import axios from 'axios';
-import AdminSidebar from './AdminSidebar'; // Adjust the import path as needed
+import CustomerSidebar from './CustomerSidebar'; 
 
-const ActiveProducts = () => {
+const BrowseProducts = () => {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
@@ -28,7 +23,7 @@ const ActiveProducts = () => {
       try {
         const token = localStorage.getItem('token');
         
-        // Update approved products to active
+        // // Update approved products to active
         await axios.patch('http://localhost:5000/api/products/update-active', {}, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -74,9 +69,6 @@ const ActiveProducts = () => {
       case 'price-high':
         result.sort((a, b) => b.startingPrice - a.startingPrice);
         break;
-      case 'rating':
-        result.sort((a, b) => b.rating - a.rating);
-        break;
       case 'featured':
         result.sort((a, b) => (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0));
         break;
@@ -98,7 +90,7 @@ const ActiveProducts = () => {
   ];
 
   const handleProductClick = (productId) => {
-    navigate(`/product/${productId}`);
+    navigate(`/customer/${productId}`);
   };
 
   const toggleSidebar = () => {
@@ -108,7 +100,7 @@ const ActiveProducts = () => {
   if (loading) {
     return (
       <div className="flex h-screen bg-gray-50">
-        <AdminSidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+        <CustomerSidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
         <div className="flex-1 flex justify-center items-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
@@ -121,8 +113,8 @@ const ActiveProducts = () => {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      {/* Admin Sidebar */}
-      <AdminSidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+      {/* Customer Sidebar */}
+      <CustomerSidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
       
       {/* Main Content */}
       <main className="flex-1 p-4 md:p-8 overflow-y-auto">
@@ -273,4 +265,4 @@ const ActiveProducts = () => {
   );
 };
 
-export default ActiveProducts;
+export default BrowseProducts;

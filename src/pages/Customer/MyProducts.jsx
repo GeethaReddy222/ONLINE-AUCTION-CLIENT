@@ -1,13 +1,20 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import CustomerSidebar from "./CustomerSidebar";
-import { FaBars } from "react-icons/fa";
+import { FaBars, FaClock, FaTag, FaGavel, FaMoneyBillWave, FaChartLine, FaEllipsisV } from "react-icons/fa";
+import { jwtDecode } from "jwt-decode";
 
 const MyProducts = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [stats, setStats] = useState({
+    totalProducts: 0,
+    activeAuctions: 0,
+    totalBids: 0,
+    highestBid: 0
+  });
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -17,41 +24,91 @@ const MyProducts = () => {
       return;
     }
 
-    axios
-      .get("http://localhost:4000/customer/my-products", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => {
-        setProducts(res.data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(
-          err.response?.data?.message ||
-            "Failed to fetch your products. Please try again."
-        );
-        setLoading(false);
+    const decoded = jwtDecode(token);
+    const sellerId = decoded.id;
+
+    // Fetch seller products
+    axios.get(`http://localhost:5000/api/customer/my-products/${sellerId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    .then((res) => {
+      setProducts(res.data);
+      
+      // Calculate statistics
+      const activeAuctions = res.data.filter(p => p.status === 'active').length;
+      const totalBids = res.data.reduce((sum, product) => sum + product.bids.length, 0);
+      const highestBid = res.data.reduce((max, product) => {
+        const productMax = Math.max(...product.bids.map(b => b.amount), 0);
+        return productMax > max ? productMax : max;
+      }, 0);
+      
+      setStats({
+        totalProducts: res.data.length,
+        activeAuctions,
+        totalBids,
+        highestBid
       });
+      
+      setLoading(false);
+    })
+    .catch((err) => {
+      setError(
+        err.response?.data?.message ||
+        "Failed to fetch your products. Please try again."
+      );
+      setLoading(false);
+    });
   }, []);
 
+  const getStatusBadge = (status) => {
+    const statusMap = {
+      active: { color: "bg-green-100 text-green-800", icon: "bg-green-500" },
+      completed: { color: "bg-purple-100 text-purple-800", icon: "bg-purple-500" },
+      draft: { color: "bg-yellow-100 text-yellow-800", icon: "bg-yellow-500" },
+      scheduled: { color: "bg-blue-100 text-blue-800", icon: "bg-blue-500" },
+      canceled: { color: "bg-red-100 text-red-800", icon: "bg-red-500" }
+    };
+    
+    return statusMap[status] || statusMap.draft;
+  };
+
+  const formatTime = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
+  const formatTimeFull = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   return (
-    <div className="h-screen flex flex-col bg-gray-100">
+    <div className="h-screen flex flex-col bg-gray-50">
       {/* Mobile top bar */}
-      <div className="md:hidden p-4 bg-white shadow flex justify-between items-center">
+      <div className="md:hidden p-4 bg-gradient-to-r from-blue-600 to-indigo-700 shadow flex justify-between items-center">
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="text-blue-600 text-2xl"
+          className="text-white text-2xl"
           aria-label="Toggle sidebar"
         >
           <FaBars />
         </button>
-        <h1 className="text-blue-600 font-bold text-lg">My Products</h1>
+        <h1 className="text-white font-bold text-xl">My Products</h1>
       </div>
 
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
         <div
-          className={`fixed inset-y-0 left-0 z-30 w-64 bg-blue-600 shadow-md transform
+          className={`fixed inset-y-0 left-0 z-30 w-64 bg-gradient-to-b from-blue-800 to-indigo-900 shadow-md transform
             md:relative md:translate-x-0 transition-transform duration-300 ease-in-out
             ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
         >
@@ -64,7 +121,7 @@ const MyProducts = () => {
         {/* Overlay for mobile */}
         {sidebarOpen && (
           <div
-            className="fixed inset-0 bg-blue-gray-800 bg-opacity-30 backdrop-blur-sm z-20 md:hidden"
+            className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm z-20 md:hidden"
             onClick={() => setSidebarOpen(false)}
             aria-hidden="true"
           ></div>
@@ -72,46 +129,151 @@ const MyProducts = () => {
 
         {/* Main content */}
         <main className="flex-1 p-6 overflow-y-auto">
+          {/* Page header */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-800">My Auction Products</h1>
+            <p className="text-gray-600 mt-2">
+              Manage all your auction listings in one place
+            </p>
+          </div>
+          
+          
+          {/* Products grid */}
           {loading ? (
             <div className="flex justify-center items-center h-64">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+              <p className="ml-4 text-gray-600">Loading your products...</p>
             </div>
           ) : error ? (
-            <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded">
-              <p>{error}</p>
+            <div className="bg-red-50 rounded-xl p-6 border border-red-100 mb-6">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                  </div>
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-lg font-medium text-red-800">Error loading products</h3>
+                  <p className="text-red-700">{error}</p>
+                </div>
+              </div>
             </div>
           ) : products.length === 0 ? (
-            <p className="text-gray-600 text-center mt-10">
-              You have not added any products for auction.
-            </p>
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-12 text-center border border-gray-200">
+              <div className="max-w-md mx-auto">
+                <div className="w-24 h-24 mx-auto rounded-full bg-blue-100 flex items-center justify-center mb-6">
+                  <FaTag className="text-4xl text-blue-600" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-800 mb-2">No products found</h3>
+                <p className="text-gray-600 mb-6">
+                  You haven't listed any products for auction yet. Start your first auction to see it here.
+                </p>
+                <button className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all">
+                  Create New Auction
+                </button>
+              </div>
+            </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {products.map((product) => (
-                <div
-                  key={product._id}
-                  className="bg-white rounded shadow p-4 flex flex-col"
-                >
-                  <h3 className="text-xl font-semibold mb-2">{product.title}</h3>
-                  <p className="text-gray-700 mb-1">
-                    Category: <span className="capitalize">{product.category}</span>
-                  </p>
-                  <p className="text-gray-700 mb-1">
-                    Starting Price: ₹{product.startingPrice.toFixed(2)}
-                  </p>
-                  <p className="text-gray-700 mb-1">
-                    Current Price: ₹{product.currentPrice.toFixed(2)}
-                  </p>
-                  <p className="text-gray-700 mb-1">
-                    Status: <span className="capitalize">{product.status}</span>
-                  </p>
-                  <p className="text-gray-700 mb-1">
-                    Auction Start: {new Date(product.startTime).toLocaleString()}
-                  </p>
-                  <p className="text-gray-700 mb-1">
-                    Auction End: {new Date(product.endTime).toLocaleString()}
-                  </p>
-                </div>
-              ))}
+              {products.map((product) => {
+                const statusBadge = getStatusBadge(product.status);
+                
+                return (
+                  <div
+                    key={product._id}
+                    className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200 hover:shadow-md transition-all"
+                  >
+                    {/* Product image */}
+                    <div className="relative">
+                      {product.imageUrl ? (
+                        <img 
+                          src={product.imageUrl} 
+                          alt={product.title}
+                          className="w-full h-48 object-cover"
+                        />
+                      ) : (
+                        <div className="bg-gradient-to-br from-blue-50 to-indigo-100 w-full h-48 flex items-center justify-center">
+                          <FaTag className="text-4xl text-blue-400 opacity-50" />
+                        </div>
+                      )}
+                      
+                      {/* Status badge */}
+                      <div className={`absolute top-4 right-4 ${statusBadge.color} px-3 py-1 rounded-full text-sm font-medium flex items-center`}>
+                        <span className={`w-2 h-2 rounded-full ${statusBadge.icon} mr-2`}></span>
+                        {product.status.charAt(0).toUpperCase() + product.status.slice(1)}
+                      </div>
+                    </div>
+                    
+                    {/* Product info */}
+                    <div className="p-5">
+                      <div className="flex justify-between items-start mb-3">
+                        <h3 className="text-lg font-bold text-gray-900">{product.title}</h3>
+                        <button className="text-gray-400 hover:text-gray-600">
+                          <FaEllipsisV />
+                        </button>
+                      </div>
+                      
+                      <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                        {product.description || "No description available"}
+                      </p>
+                      
+                      <div className="grid grid-cols-2 gap-3 mb-4">
+                        <div>
+                          <p className="text-xs text-gray-500">Starting Price</p>
+                          <p className="font-semibold text-gray-800">₹{product.startingPrice.toFixed(2)}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500">Current Bid</p>
+                          <p className="font-semibold text-blue-600">₹{product.currentPrice.toFixed(2)}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500">Bids</p>
+                          <p className="font-semibold text-gray-800">{product.bids.length}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500">Category</p>
+                          <p className="font-semibold text-gray-800 capitalize">{product.category}</p>
+                        </div>
+                      </div>
+                      
+                      {/* Auction timeline */}
+                      <div className="border-t border-gray-100 pt-4">
+                        <div className="flex items-center text-sm text-gray-600 mb-2">
+                          <FaClock className="text-gray-500 mr-2" />
+                          <span className="font-medium">Auction Timeline</span>
+                        </div>
+                        
+                        <div className="flex justify-between text-xs text-gray-600">
+                          <div>
+                            <p className="font-medium">Start</p>
+                            <p>{formatTime(product.startTime)}</p>
+                          </div>
+                          <div className="text-center">
+                            <div className="w-16 h-1 bg-gray-200 rounded-full mx-auto my-1"></div>
+                            <p className="text-gray-500">Duration</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-medium">End</p>
+                            <p>{formatTime(product.endTime)}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Card footer */}
+                    <div className="px-5 py-3 bg-gray-50 border-t border-gray-100 flex justify-between">
+                      <button className="text-blue-600 hover:text-blue-800 font-medium text-sm">
+                        View Details
+                      </button>
+                      <button className="text-gray-600 hover:text-gray-900 text-sm font-medium">
+                        Manage
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </main>
