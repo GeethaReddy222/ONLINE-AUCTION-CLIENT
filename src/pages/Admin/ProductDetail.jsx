@@ -80,19 +80,6 @@ const ProductDetail = () => {
     );
   }
 
-  if (error) {
-    return (
-      <div className="flex h-screen bg-gray-50">
-        <AdminSidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-        <div className="flex-1 flex justify-center items-center">
-          <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 max-w-md">
-            <p className="font-medium">Error: {error}</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   if (!product) {
     return (
       <div className="flex h-screen bg-gray-50">

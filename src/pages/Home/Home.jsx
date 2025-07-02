@@ -112,118 +112,18 @@ const Home = () => {
             </p>
             <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
               <button 
-                onClick={() => navigate('/register')}
                 className="bg-gradient-to-r from-[#d4af37] to-[#b8972e] hover:from-[#b8972e] hover:to-[#9c7c24] text-white font-semibold py-3 px-8 rounded-md transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg flex items-center"
               >
                 Start Bidding <FaArrowRight className="ml-2" />
               </button>
               <button 
-                onClick={() => navigate('/auctions')}
                 className="bg-white border-2 border-[#d4af37] text-[#d4af37] hover:bg-[#faf5e6] font-semibold py-3 px-8 rounded-md transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg"
               >
                 Explore Auctions
               </button>
             </div>
           </div>
-          
-          <div className="relative">
-            <div className="bg-white rounded-xl shadow-xl p-6 max-w-md mx-auto relative z-10 transition-all duration-300 hover:shadow-2xl hover:-translate-y-2">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-semibold">Featured Auction</h3>
-                <div className="flex">
-                  {[...Array(5)].map((_, i) => (
-                    <FaStar key={i} className={`${i < 4 ? 'text-[#d4af37]' : 'text-gray-300'} ml-1`} />
-                  ))}
-                </div>
-              </div>
-              
-              <div 
-                className="relative h-64 bg-gray-200 rounded-lg mb-4 flex items-center justify-center overflow-hidden cursor-pointer group"
-                onClick={() => navigate(`/auction/${featuredAuctions[currentSlide].id}`)}
-              >
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-                <div className="absolute top-4 left-4 bg-[#d4af37] text-white text-xs font-semibold py-1 px-2 rounded transform transition-transform group-hover:scale-105">
-                  {featuredAuctions[currentSlide].category}
-                </div>
-                <div className="absolute bottom-4 left-4 text-white transition-transform group-hover:-translate-y-2">
-                  <h4 className="text-xl font-bold">{featuredAuctions[currentSlide].title}</h4>
-                  <p className="text-lg font-semibold">${featuredAuctions[currentSlide].currentBid.toLocaleString()}</p>
-                </div>
-                
-                {/* Hover overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#d4af37]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                  <div className="bg-white/90 text-[#2d3748] py-1 px-3 rounded-full font-medium text-sm">
-                    View Auction
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex justify-between mb-4">
-                <div className="flex items-center text-gray-600">
-                  <FaHeart className="text-red-500 mr-1" />
-                  <span className="text-sm">{featuredAuctions[currentSlide].bids} bids</span>
-                </div>
-                <div className="flex items-center text-gray-600">
-                  <FaEye className="text-blue-500 mr-1" />
-                  <span className="text-sm">{featuredAuctions[currentSlide].watchers} watchers</span>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-4 gap-2 mb-4">
-                <div className="bg-[#f8f9fa] rounded-lg py-2 text-center transition-all duration-300 hover:bg-[#d4af37]/10 hover:shadow-inner">
-                  <div className="text-lg font-bold">{timeLeft.days}</div>
-                  <div className="text-xs text-gray-500">DAYS</div>
-                </div>
-                <div className="bg-[#f8f9fa] rounded-lg py-2 text-center transition-all duration-300 hover:bg-[#d4af37]/10 hover:shadow-inner">
-                  <div className="text-lg font-bold">{timeLeft.hours}</div>
-                  <div className="text-xs text-gray-500">HOURS</div>
-                </div>
-                <div className="bg-[#f8f9fa] rounded-lg py-2 text-center transition-all duration-300 hover:bg-[#d4af37]/10 hover:shadow-inner">
-                  <div className="text-lg font-bold">{timeLeft.minutes}</div>
-                  <div className="text-xs text-gray-500">MIN</div>
-                </div>
-                <div className="bg-[#f8f9fa] rounded-lg py-2 text-center transition-all duration-300 hover:bg-[#d4af37]/10 hover:shadow-inner">
-                  <div className="text-lg font-bold">{timeLeft.seconds}</div>
-                  <div className="text-xs text-gray-500">SEC</div>
-                </div>
-              </div>
-              
-              <button 
-                className="w-full bg-gradient-to-r from-[#2d3748] to-[#1a202c] hover:from-[#1a202c] hover:to-[#0d1117] text-white font-semibold py-3 rounded-md transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg"
-                onClick={() => navigate(`/auction/${featuredAuctions[currentSlide].id}`)}
-              >
-                Place Bid
-              </button>
-              
-              <div className="flex justify-center mt-4">
-                <button 
-                  onClick={handlePrevSlide}
-                  className="p-2 rounded-full hover:bg-gray-100 mx-1 transition-colors duration-300"
-                >
-                  <FaArrowRight className="transform rotate-180" />
-                </button>
-                {featuredAuctions.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setCurrentSlide(i)}
-                    className={`w-3 h-3 rounded-full mx-1 transition-all duration-300 ${
-                      i === currentSlide ? 'bg-[#d4af37] scale-125' : 'bg-gray-300 hover:bg-[#d4af37]/50'
-                    }`}
-                  />
-                ))}
-                <button 
-                  onClick={handleNextSlide}
-                  className="p-2 rounded-full hover:bg-gray-100 mx-1 transition-colors duration-300"
-                >
-                  <FaArrowRight />
-                </button>
-              </div>
-            </div>
-            
-            {/* Decorative elements */}
-            <div className="absolute top-10 -left-10 w-32 h-32 rounded-full bg-[#d4af37]/10 z-0 animate-pulse"></div>
-            <div className="absolute bottom-10 -right-10 w-40 h-40 rounded-full bg-[#2d3748]/10 z-0 animate-pulse"></div>
-          </div>
+           
         </div>
       </section>
 
@@ -293,18 +193,18 @@ const Home = () => {
               { name: 'Jewelry', icon: <GiDiamondRing className="text-2xl" />, count: 24, color: '#d4af37' },
               { name: 'Electronics', icon: <MdOutlineTimer className="text-2xl" />, count: 18, color: '#4299e1' },
               { name: 'Vehicles', icon: <RiCarFill className="text-2xl" />, count: 12, color: '#e53e3e' },
-              { name: 'Collectibles', icon: <FaTrophy className="text-2xl" />, count: 36, color: '#38a169' },
+              
               { name: 'Art & Antiques', icon: <BsBrush className="text-2xl" />, count: 15, color: '#9f7aea' },
               { name: 'Fashion', icon: <GiPriceTag className="text-2xl" />, count: 28, color: '#ed64a6' },
               { name: 'Home & Garden', icon: <FaHome className="text-2xl" />, count: 22, color: '#0bc5ea' },
               { name: 'Sports', icon: <FaTrophy className="text-2xl" />, count: 19, color: '#dd6b20' },
               { name: 'Watches', icon: <FaClock className="text-2xl" />, count: 14, color: '#319795' },
-              { name: 'Gaming', icon: <TbDeviceGamepad2 className="text-2xl" />, count: 31, color: '#805ad5' }
+  
             ].map((category, i) => (
               <div 
                 key={i} 
-                className="bg-white rounded-xl p-6 text-center shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer group border border-gray-100 hover:-translate-y-2"
-                onClick={() => navigate(`/category/${category.name.toLowerCase()}`)}
+                className="bg-white rounded-xl p-6 text-center shadow-sm hover:shadow-xl transition-all duration-300  group border border-gray-100 hover:-translate-y-2"
+              
                 onMouseEnter={() => handleCategoryHover(i)}
                 onMouseLeave={handleCategoryLeave}
               >
@@ -394,65 +294,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="py-16 px-6 md:px-12 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <div className="bg-[#d4af37]/10 text-[#d4af37] text-sm font-semibold py-1 px-4 rounded-full inline-block mb-4 transform transition-transform duration-300 hover:scale-105">
-              HAPPY BIDDERS
-            </div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">What Our Users Say</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Discover why thousands of collectors trust PrimeBid for premium auctions.
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[
-              {
-                name: "Sarah Johnson",
-                role: "Art Collector",
-                comment: "I've acquired three valuable pieces through LuxeBid. The authentication process gives me confidence in every purchase.",
-                rating: 5
-              },
-              {
-                name: "Michael Chen",
-                role: "Watch Enthusiast",
-                comment: "The real-time bidding experience is exhilarating. I finally got my grail watch after months of searching!",
-                rating: 5
-              },
-              {
-                name: "Emily Rodriguez",
-                role: "Jewelry Designer",
-                comment: "Selling my collection through LuxeBid exceeded my expectations. The platform is professional and the audience is serious.",
-                rating: 4
-              }
-            ].map((testimonial, i) => (
-              <div 
-                key={i} 
-                className="bg-[#f8f9fa] rounded-xl p-6 border border-gray-100 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-[#d4af37]/30"
-              >
-                <div className="flex mb-4">
-                  {[...Array(5)].map((_, starIndex) => (
-                    <FaStar 
-                      key={starIndex} 
-                      className={`${starIndex < testimonial.rating ? 'text-[#d4af37]' : 'text-gray-300'} mr-1`} 
-                    />
-                  ))}
-                </div>
-                <p className="text-gray-600 italic mb-6">"{testimonial.comment}"</p>
-                <div className="flex items-center">
-                  <div className="w-12 h-12 rounded-full bg-gray-200 mr-4"></div>
-                  <div>
-                    <h4 className="font-bold">{testimonial.name}</h4>
-                    <p className="text-sm text-gray-500">{testimonial.role}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+     
 
       {/* CTA */}
       <section className="py-20 px-6 md:px-12 bg-gradient-to-r from-[#2d3748] to-[#1a202c] text-white">
@@ -463,13 +305,13 @@ const Home = () => {
           </p>
           <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
             <button 
-              onClick={() => navigate('/register')}
+             
               className="bg-gradient-to-r from-[#d4af37] to-[#b8972e] hover:from-[#b8972e] hover:to-[#9c7c24] text-white font-semibold py-3 px-8 rounded-md transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg"
             >
               Create Free Account
             </button>
             <button 
-              onClick={() => navigate('/login')}
+             
               className="bg-transparent border-2 border-white text-white font-semibold py-3 px-8 rounded-md hover:bg-white/10 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg"
             >
               Login to Account

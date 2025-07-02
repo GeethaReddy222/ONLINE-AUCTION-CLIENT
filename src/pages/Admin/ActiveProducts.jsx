@@ -4,14 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import { 
   FaSearch, 
   FaFilter, 
-  FaStar, 
-  FaHeart, 
-  FaEye,
-  FaUser,
   FaTag    
 } from 'react-icons/fa';
 import axios from 'axios';
-import AdminSidebar from './AdminSidebar'; // Adjust the import path as needed
+import AdminSidebar from './AdminSidebar'; 
 
 const ActiveProducts = () => {
   const navigate = useNavigate();
@@ -49,11 +45,11 @@ const ActiveProducts = () => {
     fetchActiveProducts();
   }, []);
 
-  // Apply filters and sorting
+  // filters and sorting
   useEffect(() => {
     let result = [...products];
     
-    // Apply search filter
+    // search filter
     if (searchTerm) {
       result = result.filter(product => 
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -61,7 +57,7 @@ const ActiveProducts = () => {
       );
     }
     
-    // Apply category filter
+    // category filter
     if (categoryFilter !== 'all') {
       result = result.filter(product => product.category === categoryFilter);
     }
