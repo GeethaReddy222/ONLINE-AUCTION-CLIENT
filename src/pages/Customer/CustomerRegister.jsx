@@ -74,7 +74,7 @@ const CustomerRegister = () => {
       );
 
       if (response.data.success) {
-        setSuccessMessage("✅ Admin account created successfully!");
+        setSuccessMessage("✅ Customer account created successfully!");
         setTimeout(() => {
           navigate("/login");
         }, 1500);

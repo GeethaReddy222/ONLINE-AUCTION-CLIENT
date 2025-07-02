@@ -141,7 +141,7 @@ const AdminRegister = () => {
 
         {/* Right Side - Registration Form */}
         <div className="w-full md:w-3/5 p-8">
-          <div className="text-center mb-8">
+          <div className="text-center mb-10 mt-5">
             <h2 className="text-2xl font-bold text-[#2d3748]">
               Create Admin Account
             </h2>
@@ -250,23 +250,13 @@ const AdminRegister = () => {
               )}
             </div>
 
-            {/* Terms */}
-            <div className="flex items-center mt-1">
-              <input
-                type="checkbox"
-                id="terms"
-                className="w-4 h-4 text-[#d4af37] bg-gray-100 border-gray-300 rounded focus:ring-[#d4af37] focus:ring-2"
-              />
-              <label htmlFor="terms" className="ml-2 text-sm text-[#718096]">
-                I agree to the <a href="#" className="text-[#d4af37] hover:underline">terms and conditions</a>
-              </label>
-            </div>
+           
 
             {/* Submit Button */}
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full py-3 px-4 bg-gradient-to-r from-[#d4af37] to-[#b8972e] hover:from-[#b8972e] hover:to-[#9c7c24] text-white font-medium rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#d4af37] focus:ring-offset-2 transition-all ${
+              className={`w-full py-3 mt-5 px-4 bg-gradient-to-r from-[#d4af37] to-[#b8972e] hover:from-[#b8972e] hover:to-[#9c7c24] text-white font-medium rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#d4af37] focus:ring-offset-2 transition-all ${
                 isLoading
                   ? "opacity-75 cursor-not-allowed"
                   : "hover:translate-y-[-1px] hover:shadow-lg"
