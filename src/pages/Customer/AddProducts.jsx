@@ -11,7 +11,7 @@ export default function AddProduct() {
     startTime: '',
     endTime: '',
     startingPrice: '',
-    images: [], // store image URLs as comma separated input
+    images: '',
   });
 
   const [loading, setLoading] = useState(false);
@@ -32,7 +32,6 @@ export default function AddProduct() {
     setError('');
     setSuccess('');
 
-    // Prepare images array from comma separated URLs (basic handling)
     const imagesArray = formData.images
       .split(',')
       .map(url => url.trim())
@@ -48,7 +47,7 @@ export default function AddProduct() {
 
     try {
       await axios.post(
-        'http://localhost:4000/customer/products',
+        'http://localhost:5000/api/products/add-product',
         {
           title: formData.title,
           description: formData.description,
@@ -79,7 +78,6 @@ export default function AddProduct() {
     }
     setLoading(false);
   };
-
   return (
     <div className="h-screen flex flex-col bg-gray-100">
       {/* Mobile Top Bar */}

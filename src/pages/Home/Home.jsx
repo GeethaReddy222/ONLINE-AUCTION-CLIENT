@@ -190,15 +190,15 @@ const Home = () => {
           
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
             {[
-              { name: 'Jewelry', icon: <GiDiamondRing className="text-2xl" />, count: 24, color: '#d4af37' },
-              { name: 'Electronics', icon: <MdOutlineTimer className="text-2xl" />, count: 18, color: '#4299e1' },
-              { name: 'Vehicles', icon: <RiCarFill className="text-2xl" />, count: 12, color: '#e53e3e' },
+              { name: 'Jewelry', icon: <GiDiamondRing className="text-2xl" />, color: '#d4af37' },
+              { name: 'Electronics', icon: <MdOutlineTimer className="text-2xl" />,  color: '#4299e1' },
+              { name: 'Vehicles', icon: <RiCarFill className="text-2xl" />,  color: '#e53e3e' },
               
-              { name: 'Art & Antiques', icon: <BsBrush className="text-2xl" />, count: 15, color: '#9f7aea' },
-              { name: 'Fashion', icon: <GiPriceTag className="text-2xl" />, count: 28, color: '#ed64a6' },
-              { name: 'Home & Garden', icon: <FaHome className="text-2xl" />, count: 22, color: '#0bc5ea' },
-              { name: 'Sports', icon: <FaTrophy className="text-2xl" />, count: 19, color: '#dd6b20' },
-              { name: 'Watches', icon: <FaClock className="text-2xl" />, count: 14, color: '#319795' },
+              { name: 'Art & Antiques', icon: <BsBrush className="text-2xl" />, color: '#9f7aea' },
+              { name: 'Fashion', icon: <GiPriceTag className="text-2xl" />, color: '#ed64a6' },
+              { name: 'Home & Garden', icon: <FaHome className="text-2xl" />,  color: '#0bc5ea' },
+              { name: 'Sports', icon: <FaTrophy className="text-2xl" />,  color: '#dd6b20' },
+              { name: 'Watches', icon: <FaClock className="text-2xl" />,  color: '#319795' },
   
             ].map((category, i) => (
               <div 
@@ -228,12 +228,7 @@ const Home = () => {
                 >
                   {category.name}
                 </h3>
-                <p 
-                  className="text-sm transition-colors"
-                  style={{ color: hoveredCategory === i ? category.color : '#718096' }}
-                >
-                  {category.count} active auctions
-                </p>
+               
               </div>
             ))}
           </div>

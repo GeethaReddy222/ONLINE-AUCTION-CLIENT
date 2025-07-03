@@ -23,7 +23,7 @@ const BrowseProducts = () => {
       try {
         const token = localStorage.getItem('token');
         
-        // // Update approved products to active
+        // Update approved products to active
         await axios.patch('http://localhost:5000/api/products/update-active', {}, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -215,7 +215,13 @@ const BrowseProducts = () => {
                   
                   {/* Product Image */}
                   <div className="h-48 overflow-hidden">
-                    {product.imageUrl ? (
+                    {product.images && product.images.length > 0 ? (
+                      <img 
+                        src={product.images[0].url} 
+                        alt={product.name} 
+                        className="w-100 h-100 object-cover transition-transform duration-500 hover:scale-105"
+                      />
+                    ) : product.imageUrl ? (
                       <img 
                         src={product.imageUrl} 
                         alt={product.name} 
@@ -232,23 +238,33 @@ const BrowseProducts = () => {
                   <div className="p-5">
                     <div className="flex justify-between items-start">
                       <div>
-                        <h3 className="text-lg font-bold text-gray-900">{product.name}</h3>
+                        <h3 className="text-lg font-bold text-gray-900">{product.title}</h3>
                         <p className="mt-1 text-sm text-gray-500 line-clamp-2">{product.description}</p>
                       </div>
                       <div className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full">
-                        {product.category.charAt(0).toUpperCase() + product.category.slice(1)}
+                        {product.category ? 
+                          product.category.charAt(0).toUpperCase() + product.category.slice(1)
+                          : 'Uncategorized'
+                        }
                       </div>
                     </div>
                     
                     <div className="mt-4 flex items-center justify-between">
                       <div>
-                        <span className="text-xl font-bold text-gray-900">${product.startingPrice}</span>
+                        <span className="text-xl font-bold text-gray-900">
+                          ${product.startingPrice?.toFixed(2) || '0.00'}
+                        </span>
                       </div>
-                      
-                     
+                      <div className={`text-xs px-2 py-1 rounded-full ${
+                        product.status === 'active' 
+                          ? 'bg-green-100 text-green-800' 
+                          : product.status === 'sold'
+                            ? 'bg-purple-100 text-purple-800'
+                            : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {product.status.toUpperCase()}
+                      </div>
                     </div>
-                    
-                    
                   </div>
                 </div>
               ))}

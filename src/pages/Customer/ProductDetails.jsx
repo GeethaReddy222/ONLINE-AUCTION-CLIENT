@@ -2,15 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { jwtDecode } from "jwt-decode";
-  
 import {
-  FaShoppingCart,
   FaClock,
   FaUser,
   FaTag,
   FaArrowLeft,
   FaBan,
-  FaExclamationTriangle
+  FaExclamationTriangle,
+  FaChevronLeft,
+  FaChevronRight,
+  FaTrophy
 } from 'react-icons/fa';
 import CustomerSidebar from './CustomerSidebar';
 
@@ -24,15 +25,21 @@ const ProductDetails = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [userHasBid, setUserHasBid] = useState(false); // ADDED: Track user bid status
-  const [currentUserId, setCurrentUserId] = useState(null); // ADDED: Current user ID
+  const [userHasBid, setUserHasBid] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [images, setImages] = useState([]);
+  const [auctionStatus, setAuctionStatus] = useState('active');
+  const [winner, setWinner] = useState(null);
 
   useEffect(() => {
-    // Get current user ID from token
     const token = localStorage.getItem('token');
+    let currentUser = null;
+    
     if (token) {
       try {
         const decoded = jwtDecode(token);
+        currentUser = decoded;
         setCurrentUserId(decoded.userId);
       } catch (err) {
         console.error("Error decoding token", err);
@@ -47,146 +54,191 @@ const ProductDetails = () => {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         
-        // Sort bids in descending order
-        const sortedBids = [...response.data.bids].sort(
+        const productData = response.data.product;
+        const sortedBids = [...productData.bids].sort(
           (a, b) => b.amount - a.amount
         );
         
-        setProduct(response.data.product);
+        setProduct(productData);
         setBids(sortedBids);
 
-        // Check if current user has already bid
-        if (currentUserId) {
+        // Process images
+        let imageArray = [];
+        if (productData.images?.length > 0) {
+          imageArray = [...productData.images];
+          const primaryIndex = imageArray.findIndex(img => img.isPrimary);
+          if (primaryIndex !== -1) {
+            const primaryImage = imageArray.splice(primaryIndex, 1)[0];
+            imageArray.unshift(primaryImage);
+          }
+        } else if (productData.imageUrl) {
+          imageArray = [{ url: productData.imageUrl, isPrimary: true }];
+        }
+        setImages(imageArray);
+
+        // Check if user has bid
+        if (currentUser?.userId) {
           const hasBid = sortedBids.some(
-            bid => bid.bidder?._id === currentUserId
+            bid => bid.bidder?._id === currentUser.userId
           );
           setUserHasBid(hasBid);
         }
+        
+        // Determine auction status
+        const now = new Date();
+        const endTime = new Date(productData.endTime);
+        
+        if (now > endTime) {
+          if (sortedBids.length > 0) {
+            setAuctionStatus('sold');
+            setWinner(sortedBids[0].bidder);
+          } else {
+            setAuctionStatus('unsold');
+          }
+        } else {
+          setAuctionStatus('active');
+        }
       } catch (err) {
         setError('Failed to fetch product details');
+        console.error("Fetch error:", err);
       } finally {
         setLoading(false);
       }
     };
 
     fetchProductDetails();
-  }, [productId, currentUserId]); // Added currentUserId dependency
+  }, [productId]);
 
   const handleBidSubmit = async (e) => {
     e.preventDefault();
+    if (!bidAmount) return;
+    
     try {
       const token = localStorage.getItem('token');
-      
       await axios.post(
-        `http://localhost:5000/api/products/bids/${productId}`,
-        { amount: bidAmount, quantity: 1 },
+        `http://localhost:5000/api/products/${productId}/bid`,
+        { amount: parseFloat(bidAmount) },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
       setSuccess('Bid placed successfully!');
-      setBidAmount('');
-      setUserHasBid(true); // Mark user as having bid
-      setError(''); // Clear any previous errors
-
-      // Refresh bids
+      
+      // Refresh product and bids
       const response = await axios.get(
         `http://localhost:5000/api/products/${productId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      
-      const sortedBids = [...response.data.bids].sort(
+      const sortedBids = [...response.data.product.bids].sort(
         (a, b) => b.amount - a.amount
       );
       setBids(sortedBids);
-    } catch (err) {
-      // Handle existing bid error specifically
-      if (err.response?.data?.message.includes("already placed a bid")) {
-        setError(`You've already bid on this product`);
-        setUserHasBid(true);
-      } else {
-        setError(err.response?.data?.message || 'Failed to place bid');
+      setUserHasBid(true);
+      setBidAmount('');
+      
+      // Check if auction should be marked as sold
+      const now = new Date();
+      const endTime = new Date(response.data.product.endTime);
+      if (now > endTime) {
+        await axios.patch(
+          `http://localhost:5000/api/products/${productId}/mark-sold`,
+          {},
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setAuctionStatus('sold');
+        setWinner(sortedBids[0].bidder);
       }
-      setSuccess('');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to place bid');
     }
   };
 
-  // Loading state
+  const nextImage = () => {
+    setCurrentImageIndex((prevIndex) => 
+      prevIndex === images.length - 1 ? 0 : prevIndex + 1
+    );
+  };
+
+  const prevImage = () => {
+    setCurrentImageIndex((prevIndex) => 
+      prevIndex === 0 ? images.length - 1 : prevIndex - 1
+    );
+  };
+
   if (loading) {
     return (
-      <div className="flex h-screen bg-gray-50">
+      <div className="flex min-h-screen bg-gray-50">
         <CustomerSidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-        <div className="flex-1 flex justify-center items-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-        </div>
-      </div>
-    );
-  }
-
-  // Error state
-  if (error && !product) {
-    return (
-      <div className="flex h-screen bg-gray-50">
-        <CustomerSidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-        <div className="flex-1 flex justify-center items-center">
-          <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 max-w-md">
-            <p className="font-medium">Error: {error}</p>
+        <main className="flex-1 p-4 md:p-8 overflow-y-auto flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading product details...</p>
           </div>
-        </div>
+        </main>
       </div>
     );
   }
 
-  // Product not found
+  
+
   if (!product) {
     return (
-      <div className="flex h-screen bg-gray-50">
+      <div className="flex min-h-screen bg-gray-50">
         <CustomerSidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-        <div className="flex-1 flex justify-center items-center">
-          <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 max-w-md">
-            <p className="font-medium">Product not found</p>
+        <main className="flex-1 p-4 md:p-8 overflow-y-auto">
+          <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-lg mb-6">
+            <div className="flex items-center">
+              <FaBan className="text-yellow-500 mr-3" />
+              <p className="text-yellow-700 font-medium">Product not found</p>
+            </div>
           </div>
-        </div>
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center text-blue-600 hover:text-blue-800 mb-6"
+          >
+            <FaArrowLeft className="mr-2" /> Back to Products
+          </button>
+        </main>
       </div>
     );
   }
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      {/* Customer Sidebar */}
       <CustomerSidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
       
-      {/* Main Content */}
       <main className="flex-1 p-4 md:p-8 overflow-y-auto">
-        <div className="mb-6">
-          <button 
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="md:hidden bg-blue-600 text-white p-2 rounded-lg mb-4"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-          
-          <button 
-            onClick={() => navigate(-1)}
-            className="flex items-center text-blue-600 hover:text-blue-800"
-          >
-            <FaArrowLeft className="mr-2" />
-            Back to Products
-          </button>
-        </div>
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center text-blue-600 hover:text-blue-800 mb-6"
+        >
+          <FaArrowLeft className="mr-2" /> Back to Products
+        </button>
 
-        {/* User Bid Status Banner */}
-        {userHasBid && (
+        {auctionStatus === 'sold' && (
+          <div className="bg-green-50 border-l-4 border-green-500 p-4 mb-6">
+            <div className="flex items-start">
+              <FaTrophy className="text-green-500 mt-1 mr-3 flex-shrink-0" />
+              <div>
+                <p className="text-green-700 font-medium">
+                  Auction Ended - Sold to {winner?.name || 'the highest bidder'}
+                </p>
+                <p className="text-green-600 text-sm mt-1">
+                  This auction has ended successfully with a winning bid.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {auctionStatus === 'unsold' && (
           <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-6">
             <div className="flex items-start">
-              <FaBan className="text-yellow-500 mt-1 mr-3 flex-shrink-0" />
+              <FaExclamationTriangle className="text-yellow-500 mt-1 mr-3 flex-shrink-0" />
               <div>
                 <p className="text-yellow-700 font-medium">
-                  You've already placed a bid on this product
+                  Auction Ended - Unsold
                 </p>
                 <p className="text-yellow-600 text-sm mt-1">
-                  You can only bid once per item. Check your bids in the dashboard.
+                  This auction ended without any bids.
                 </p>
               </div>
             </div>
@@ -195,63 +247,93 @@ const ProductDetails = () => {
 
         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-6">
-            {/* Product Image */}
-            <div className="lg:pr-8">
-              {product.imageUrl ? (
-                <div className="rounded-xl overflow-hidden h-96">
-                  <img 
-                    src={product.imageUrl} 
-                    alt={product.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+            {/* Image Gallery */}
+            <div className="relative">
+              {images.length > 0 ? (
+                <>
+                  <div className="aspect-w-16 aspect-h-9 bg-gray-200 rounded-lg overflow-hidden">
+                    <img
+                      src={images[currentImageIndex]?.url}
+                      alt={product.name}
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                  
+                  {images.length > 1 && (
+                    <>
+                      <button
+                        onClick={prevImage}
+                        className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75"
+                      >
+                        <FaChevronLeft />
+                      </button>
+                      <button
+                        onClick={nextImage}
+                        className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75"
+                      >
+                        <FaChevronRight />
+                      </button>
+                      <div className="flex mt-4 space-x-2 overflow-x-auto py-2">
+                        {images.map((img, index) => (
+                          <button
+                            key={index}
+                            onClick={() => setCurrentImageIndex(index)}
+                            className={`flex-shrink-0 w-16 h-16 rounded-md overflow-hidden border-2 ${
+                              index === currentImageIndex
+                                ? 'border-blue-500'
+                                : 'border-transparent'
+                            }`}
+                          >
+                            <img
+                              src={img.url}
+                              alt={`Thumbnail ${index + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </>
               ) : (
-                <div className="bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl h-96 flex items-center justify-center">
-                  <FaTag className="text-blue-500 text-6xl opacity-50" />
+                <div className="aspect-w-16 aspect-h-9 bg-gray-200 rounded-lg flex items-center justify-center">
+                  <FaTag className="text-gray-400 text-4xl" />
                 </div>
               )}
             </div>
             
             {/* Product Details */}
             <div>
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900">{product.title}</h1>
-                </div>
-                
-                <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
-                  {product.category.charAt(0).toUpperCase() + product.category.slice(1)}
-                </div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                {product.title}
+              </h1>
+              <div className="flex items-center mb-4">
+                <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                  {product.category}
+                </span>
               </div>
               
-              <p className="text-gray-700 mb-6">{product.description}</p>
+              <p className="text-gray-700 mb-6">
+                {product.description || 'No description available'}
+              </p>
               
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className="flex items-center">
-                  <FaUser className="text-blue-500 mr-2" />
+                  <FaClock className="text-gray-500 mr-2" />
                   <span className="text-gray-600">
-                    Seller: {product.seller?.name || 'Unknown'}
+                    {new Date(product.endTime).toLocaleString()}
                   </span>
                 </div>
-                
-                <div className="flex items-center">
-                  <FaTag className="text-blue-500 mr-2" />
-                  <span className="text-gray-600">Category: {product.category}</span>
-                </div>
-                
-                <div className="flex items-center">
-                  <FaClock className="text-blue-500 mr-2" />
-                  <span className="text-gray-600">
-                    Listed: {new Date(product.createdAt).toLocaleDateString()}
-                  </span>
-                </div>
-                
                 <div className="flex items-center">
                   <div className={`w-3 h-3 rounded-full mr-2 ${
-                    product.status === 'active' ? 'bg-green-500' : 'bg-gray-500'
+                    auctionStatus === 'active' 
+                      ? 'bg-green-500' 
+                      : auctionStatus === 'sold'
+                        ? 'bg-purple-500'
+                        : 'bg-gray-500'
                   }`}></div>
                   <span className="text-gray-600">
-                    Status: {product.status.toUpperCase()}
+                    Status: {auctionStatus.toUpperCase()}
                   </span>
                 </div>
               </div>
@@ -259,52 +341,72 @@ const ProductDetails = () => {
               <div className="bg-gray-50 rounded-lg p-4 mb-6">
                 <div className="flex justify-between items-center mb-4">
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900">${product.startingPrice}</h3>
+                    <h3 className="text-xl font-bold text-gray-900">
+                      ${product.startingPrice.toFixed(2)}
+                    </h3>
                     <p className="text-gray-600">Starting Price</p>
                   </div>
                   
                   <div className="text-right">
                     <h3 className="text-xl font-bold text-gray-900">
-                      ${bids.length > 0 ? bids[0].amount : product.startingPrice}
+                      ${bids.length > 0 ? bids[0].amount.toFixed(2) : product.startingPrice.toFixed(2)}
                     </h3>
-                    <p className="text-gray-600">Current Bid</p>
+                    <p className="text-gray-600">
+                      {auctionStatus === 'sold' ? 'Winning Bid' : 'Current Bid'}
+                    </p>
                   </div>
                 </div>
-              </div>
-              
-              {/* Bid Form - Only shown if user hasn't bid */}
-              {!userHasBid ? (
-                <form onSubmit={handleBidSubmit} className="mb-8">
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <div className="flex-1">
-                      <label htmlFor="bidAmount" className="block text-sm font-medium text-gray-700 mb-1">
-                        Place Your Bid
-                      </label>
-                      <input
-                        type="number"
-                        id="bidAmount"
-                        min={bids.length > 0 ? bids[0].amount + 1 : product.startingPrice + 1}
-                        value={bidAmount}
-                        onChange={(e) => setBidAmount(e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder={`Min. bid: $${bids.length > 0 ? bids[0].amount + 1 : product.startingPrice + 1}`}
-                        required
-                      />
-                    </div>
-                    <div className="flex items-end">
-                      <button
-                        type="submit"
-                        className="w-full sm:w-auto px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center"
-                      >
-                        <FaShoppingCart className="mr-2" />
-                        Place Bid
-                      </button>
+                
+                {auctionStatus === 'sold' && winner && (
+                  <div className="mt-4 pt-4 border-t border-gray-200 flex items-center">
+                    <FaTrophy className="text-yellow-500 mr-2" />
+                    <div>
+                      <p className="text-sm text-gray-600">Winner</p>
+                      <p className="font-medium">{winner.name}</p>
                     </div>
                   </div>
-                  {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
-                  {success && <p className="mt-2 text-sm text-green-600">{success}</p>}
+                )}
+              </div>
+              
+              {/* Bid Form */}
+              {auctionStatus === 'active' && !userHasBid ? (
+                <form onSubmit={handleBidSubmit} className="mb-8">
+                  {error && (
+                    <div className="bg-red-50 border-l-4 border-red-500 p-3 mb-4">
+                      <p className="text-red-700">{error}</p>
+                    </div>
+                  )}
+                  {success && (
+                    <div className="bg-green-50 border-l-4 border-green-500 p-3 mb-4">
+                      <p className="text-green-700">{success}</p>
+                    </div>
+                  )}
+                  <div className="flex items-center mb-4">
+                    <input
+                      type="number"
+                      value={bidAmount}
+                      onChange={(e) => setBidAmount(e.target.value)}
+                      placeholder="Enter your bid amount"
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      min={bids.length > 0 ? bids[0].amount + 1 : product.startingPrice + 1}
+                      step="0.01"
+                      required
+                    />
+                    <button
+                      type="submit"
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-r-lg font-medium transition duration-300"
+                    >
+                      Place Bid
+                    </button>
+                  </div>
+                  <p className="text-sm text-gray-500">
+                    Minimum bid: $
+                    {bids.length > 0 
+                      ? (bids[0].amount + 1).toFixed(2) 
+                      : (product.startingPrice + 1).toFixed(2)}
+                  </p>
                 </form>
-              ) : (
+              ) : auctionStatus === 'active' && userHasBid ? (
                 <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg mb-8">
                   <div className="flex items-center">
                     <FaExclamationTriangle className="text-blue-500 mr-3" />
@@ -312,6 +414,14 @@ const ProductDetails = () => {
                       You've already placed a bid on this product
                     </p>
                   </div>
+                </div>
+              ) : (
+                <div className="bg-gray-100 rounded-lg p-4 mb-8 text-center">
+                  <p className="text-gray-600 font-medium">
+                    {auctionStatus === 'sold'
+                      ? "This auction has ended"
+                      : "This auction ended without any bids"}
+                  </p>
                 </div>
               )}
             </div>
@@ -324,8 +434,12 @@ const ProductDetails = () => {
             {bids.length === 0 ? (
               <div className="bg-gray-50 rounded-lg p-8 text-center">
                 <FaClock className="text-gray-400 text-4xl mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No bids yet</h3>
-                <p className="text-gray-600">Be the first to place a bid on this item!</p>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No bids</h3>
+                <p className="text-gray-600">
+                  {auctionStatus === 'active'
+                    ? "Be the first to place a bid on this item!"
+                    : "This auction received no bids"}
+                </p>
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -351,8 +465,13 @@ const ProductDetails = () => {
                       <tr 
                         key={index} 
                         className={
-                          index === 0 ? "bg-green-50" : 
-                          currentUserId && bid.bidder?._id === currentUserId ? "bg-blue-50" : ""
+                          index === 0 && auctionStatus === 'sold' 
+                            ? "bg-purple-50" 
+                            : index === 0 
+                              ? "bg-green-50" 
+                              : currentUserId && bid.bidder?._id === currentUserId 
+                                ? "bg-blue-50" 
+                                : ""
                         }
                       >
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -364,24 +483,28 @@ const ProductDetails = () => {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
-                          ${bid.amount}
+                          ${bid.amount.toFixed(2)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {new Date(bid.time).toLocaleString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            index === 0 
-                              ? 'bg-green-100 text-green-800' 
-                              : currentUserId && bid.bidder?._id === currentUserId
-                                ? 'bg-blue-100 text-blue-800'
-                                : 'bg-gray-100 text-gray-800'
+                            index === 0 && auctionStatus === 'sold'
+                              ? 'bg-purple-100 text-purple-800'
+                              : index === 0 
+                                ? 'bg-green-100 text-green-800' 
+                                : currentUserId && bid.bidder?._id === currentUserId
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : 'bg-gray-100 text-gray-800'
                           }`}>
-                            {index === 0 
-                              ? 'Winning' 
-                              : currentUserId && bid.bidder?._id === currentUserId
-                                ? 'Your Bid'
-                                : 'Outbid'}
+                            {index === 0 && auctionStatus === 'sold'
+                              ? 'Winner' 
+                              : index === 0 
+                                ? 'Winning' 
+                                : currentUserId && bid.bidder?._id === currentUserId
+                                  ? 'Your Bid'
+                                  : 'Outbid'}
                           </span>
                         </td>
                       </tr>

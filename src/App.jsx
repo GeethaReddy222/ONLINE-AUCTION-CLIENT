@@ -21,7 +21,7 @@ import CustomerDashboard from './pages/Customer/CustomerDashboard.jsx';
 import CustomerProfile from './pages/Customer/CustomerProfile.jsx';
 import AddProduct from './pages/Customer/AddProducts.jsx';
 import MyProducts from './pages/Customer/MyProducts.jsx';
-import MyBidProducts from './pages/Customer/MyBidProducts.jsx';
+import MyBids from './pages/Customer/MyBids.jsx';
 import BrowseProducts from './pages/Customer/BrowseProducts.jsx';
 import ProductDetails from './pages/Customer/ProductDetails';
 
@@ -60,9 +60,9 @@ const App = () => {
           <Route path="/customer/profile" element={<CustomerProfile />} />
           <Route path="/customer/add-product" element={<AddProduct />} />
           <Route path="/customer/my-products" element={<MyProducts />} />
-          <Route path="/customer/my-bidded-products" element={<MyBidProducts />} />
           <Route path="/customer/browse-products" element={<BrowseProducts />} />
           <Route path="/customer/:productId" element={<ProductDetails />} />
+          <Route path="/customer/my-bids" element={<MyBids />} />
          
         </Routes>
       </main>

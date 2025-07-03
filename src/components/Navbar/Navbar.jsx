@@ -150,7 +150,7 @@ const Navbar = () => {
             {/* Show Login button everywhere except auth pages */}
             {!isAuthPage && (
               <Link
-                to="/"
+                to="/login"
                 className={`flex items-center px-4 py-2 rounded-md transition-colors ${
                   location.pathname === '/login'
                     ? 'bg-[#d4af37] text-white'
@@ -158,7 +158,7 @@ const Navbar = () => {
                 }`}
               >
                 <FaSignInAlt className="mr-2" />
-                Logout
+                Login
               </Link>
             )}
 

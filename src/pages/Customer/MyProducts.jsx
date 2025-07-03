@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import CustomerSidebar from "./CustomerSidebar";
-import { FaBars, FaClock, FaTag, FaGavel, FaMoneyBillWave, FaChartLine, FaEllipsisV } from "react-icons/fa";
+import { 
+  FaBars, FaClock, FaTag, FaGavel, FaMoneyBillWave, 
+  FaChartLine, FaEllipsisV, FaChevronLeft, FaChevronRight 
+} from "react-icons/fa";
 import { jwtDecode } from "jwt-decode";
 
 const MyProducts = () => {
@@ -81,14 +84,77 @@ const MyProducts = () => {
     });
   };
 
-  const formatTimeFull = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  // Image slider component for each product
+  const ImageSlider = ({ images }) => {
+    const [currentIndex, setCurrentIndex] = useState(0);
+    
+    if (!images || images.length === 0) {
+      return (
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-100 w-full h-48 flex items-center justify-center">
+          <FaTag className="text-4xl text-blue-400 opacity-50" />
+        </div>
+      );
+    }
+    
+    const goToPrev = () => {
+      setCurrentIndex((prevIndex) => 
+        prevIndex === 0 ? images.length - 1 : prevIndex - 1
+      );
+    };
+    
+    const goToNext = () => {
+      setCurrentIndex((prevIndex) => 
+        prevIndex === images.length - 1 ? 0 : prevIndex + 1
+      );
+    };
+    
+    return (
+      <div className="relative w-full h-48 overflow-hidden group">
+        <img 
+          src={images[currentIndex].url} 
+          alt={`Slide ${currentIndex + 1}`}
+          className="w-full h-full object-cover transition-transform duration-500 ease-in-out"
+        />
+        
+        {/* Navigation arrows */}
+        {images.length > 1 && (
+          <>
+            <button 
+              className="absolute left-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-30 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+              onClick={(e) => {
+                e.stopPropagation();
+                goToPrev();
+              }}
+            >
+              <FaChevronLeft />
+            </button>
+            <button 
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-30 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+              onClick={(e) => {
+                e.stopPropagation();
+                goToNext();
+              }}
+            >
+              <FaChevronRight />
+            </button>
+          </>
+        )}
+        
+        {/* Image indicators */}
+        {images.length > 1 && (
+          <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1">
+            {images.map((_, index) => (
+              <div 
+                key={index}
+                className={`w-2 h-2 rounded-full ${
+                  index === currentIndex ? 'bg-blue-500' : 'bg-gray-300'
+                }`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -137,7 +203,6 @@ const MyProducts = () => {
             </p>
           </div>
           
-          
           {/* Products grid */}
           {loading ? (
             <div className="flex justify-center items-center h-64">
@@ -185,19 +250,9 @@ const MyProducts = () => {
                     key={product._id}
                     className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200 hover:shadow-md transition-all"
                   >
-                    {/* Product image */}
+                    {/* Image slider */}
                     <div className="relative">
-                      {product.imageUrl ? (
-                        <img 
-                          src={product.imageUrl} 
-                          alt={product.title}
-                          className="w-full h-48 object-cover"
-                        />
-                      ) : (
-                        <div className="bg-gradient-to-br from-blue-50 to-indigo-100 w-full h-48 flex items-center justify-center">
-                          <FaTag className="text-4xl text-blue-400 opacity-50" />
-                        </div>
-                      )}
+                      <ImageSlider className="w-100 h-100" images={product.images} />
                       
                       {/* Status badge */}
                       <div className={`absolute top-4 right-4 ${statusBadge.color} px-3 py-1 rounded-full text-sm font-medium flex items-center`}>
@@ -250,10 +305,7 @@ const MyProducts = () => {
                             <p className="font-medium">Start</p>
                             <p>{formatTime(product.startTime)}</p>
                           </div>
-                          <div className="text-center">
-                            <div className="w-16 h-1 bg-gray-200 rounded-full mx-auto my-1"></div>
-                            <p className="text-gray-500">Duration</p>
-                          </div>
+                          
                           <div className="text-right">
                             <p className="font-medium">End</p>
                             <p>{formatTime(product.endTime)}</p>
@@ -262,15 +314,7 @@ const MyProducts = () => {
                       </div>
                     </div>
                     
-                    {/* Card footer */}
-                    <div className="px-5 py-3 bg-gray-50 border-t border-gray-100 flex justify-between">
-                      <button className="text-blue-600 hover:text-blue-800 font-medium text-sm">
-                        View Details
-                      </button>
-                      <button className="text-gray-600 hover:text-gray-900 text-sm font-medium">
-                        Manage
-                      </button>
-                    </div>
+                    
                   </div>
                 );
               })}
