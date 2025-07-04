@@ -15,6 +15,7 @@ import AdminProfile from './pages/Admin/AdminProfile.jsx';
 import PendingApprovals from './pages/Admin/PendingApprovals.jsx';
 import ActiveProducts from './pages/Admin/ActiveProducts';
 import ProductDetail from './pages/Admin/ProductDetail';
+import SoldItems from './pages/Admin/SoldItems'; 
 // Customer
 import CustomerRegister from './pages/Customer/CustomerRegister.jsx';
 import CustomerDashboard from './pages/Customer/CustomerDashboard.jsx';
@@ -54,6 +55,7 @@ const App = () => {
           <Route path="/admin/pending-approvals" element={<PendingApprovals />} />
           <Route path="/product/active-products" element={<ActiveProducts />} />
           <Route path="/product/:productId" element={<ProductDetail />} />
+          <Route path="/admin/sold-products" element={<SoldItems />} />
 
           {/* Customer Routes */}
           <Route path="/customer-dashboard" element={<CustomerDashboard />} />

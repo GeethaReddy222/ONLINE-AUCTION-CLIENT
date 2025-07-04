@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   FaHome,
   FaUser,
@@ -8,11 +9,11 @@ import {
   FaGavel,
   FaShoppingBag,
   FaSignOutAlt,
-  FaChevronLeft,
-  FaChevronRight,
+ 
 } from 'react-icons/fa';
 
 const CustomerSidebar = () => {
+  const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
 
   const toggleCollapse = () => {
@@ -116,12 +117,15 @@ const CustomerSidebar = () => {
       </nav>
 
       {/* Sidebar Footer */}
-      <div className="mt-auto border-t border-gray-700 p-4">
-        <button className="w-full flex items-center justify-center py-2 mb-5 px-4 bg-[#d4af37] hover:bg-[#b8972e] text-white font-medium rounded-lg transition-colors">
-          {!collapsed && <FaSignOutAlt className="mr-2" />}
-          <span>{collapsed ? <FaSignOutAlt /> : 'Sign Out'}</span>
-        </button>
-      </div>
+            <div className="mt-auto border-t border-gray-700 p-4">
+              <button
+                onClick={() => navigate("/")} 
+                className="w-full flex items-center justify-center py-2 mb-10 mt-10 px-4 bg-[#d4af37] hover:bg-[#b8972e] text-white font-medium rounded-lg transition-colors"
+              >
+                {!collapsed && <FaSignOutAlt className="mr-2" />}
+                <span>{collapsed ? <FaSignOutAlt /> : "Sign Out"}</span>
+              </button>
+            </div>
     </div>
   );
 };

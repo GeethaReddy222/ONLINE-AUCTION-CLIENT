@@ -1,10 +1,11 @@
-// src/pages/ActiveProducts.js
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   FaSearch, 
   FaFilter, 
-  FaTag    
+  FaTag,
+  FaChevronLeft,
+  FaChevronRight
 } from 'react-icons/fa';
 import axios from 'axios';
 import AdminSidebar from './AdminSidebar'; 
@@ -18,23 +19,29 @@ const ActiveProducts = () => {
   const [sortOption, setSortOption] = useState('featured');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [loading, setLoading] = useState(true);
+  const [currentImageIndices, setCurrentImageIndices] = useState({});
 
   useEffect(() => {
     const fetchActiveProducts = async () => {
       try {
         const token = localStorage.getItem('token');
         
-        // Update approved products to active
         await axios.patch('http://localhost:5000/api/products/update-active', {}, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        // Fetch active products
         const response = await axios.get('http://localhost:5000/api/products/active-products', {
           headers: { Authorization: `Bearer ${token}` },
         });
 
         setProducts(response.data);
+        
+        // Initialize current image indices
+        const indices = {};
+        response.data.forEach((product) => {
+          indices[product._id] = 0;
+        });
+        setCurrentImageIndices(indices);
       } catch (err) {
         console.error("Error fetching products:", err);
       } finally {
@@ -45,11 +52,11 @@ const ActiveProducts = () => {
     fetchActiveProducts();
   }, []);
 
-  // filters and sorting
+  // Apply filters and sorting
   useEffect(() => {
     let result = [...products];
     
-    // search filter
+    // Apply search filter
     if (searchTerm) {
       result = result.filter(product => 
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -57,7 +64,7 @@ const ActiveProducts = () => {
       );
     }
     
-    // category filter
+    // Apply category filter
     if (categoryFilter !== 'all') {
       result = result.filter(product => product.category === categoryFilter);
     }
@@ -70,9 +77,6 @@ const ActiveProducts = () => {
       case 'price-high':
         result.sort((a, b) => b.startingPrice - a.startingPrice);
         break;
-      case 'rating':
-        result.sort((a, b) => b.rating - a.rating);
-        break;
       case 'featured':
         result.sort((a, b) => (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0));
         break;
@@ -82,6 +86,26 @@ const ActiveProducts = () => {
     
     setFilteredProducts(result);
   }, [searchTerm, categoryFilter, sortOption, products]);
+
+  const handleNextImage = (productId, e) => {
+    e.stopPropagation();
+    setCurrentImageIndices(prev => {
+      const product = products.find(p => p._id === productId);
+      const currentIndex = prev[productId] || 0;
+      const nextIndex = (currentIndex + 1) % (product.images?.length || 1);
+      return {...prev, [productId]: nextIndex};
+    });
+  };
+
+  const handlePrevImage = (productId, e) => {
+    e.stopPropagation();
+    setCurrentImageIndices(prev => {
+      const product = products.find(p => p._id === productId);
+      const currentIndex = prev[productId] || 0;
+      const prevIndex = (currentIndex - 1 + (product.images?.length || 1)) % (product.images?.length || 1);
+      return {...prev, [productId]: prevIndex};
+    });
+  };
   
   const categories = [
     { id: 'all', name: 'All Categories' },
@@ -117,7 +141,7 @@ const ActiveProducts = () => {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      {/* Admin Sidebar */}
+      {/* Customer Sidebar */}
       <AdminSidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
       
       {/* Main Content */}
@@ -204,58 +228,105 @@ const ActiveProducts = () => {
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredProducts.map((product, index) => (
-                <div 
-                  key={index} 
-                  className="bg-white rounded-xl shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md cursor-pointer border border-gray-100"
-                  onClick={() => handleProductClick(product._id)}
-                >
-                  {/* Featured badge */}
-                  {product.isFeatured && (
-                    <div className="absolute top-4 left-4 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full z-10">
-                      FEATURED
-                    </div>
-                  )}
-                  
-                  {/* Product Image */}
-                  <div className="h-48 overflow-hidden">
-                    {product.imageUrl ? (
-                      <img 
-                        src={product.imageUrl} 
-                        alt={product.name} 
-                        className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
-                        <FaTag className="text-blue-500 text-4xl opacity-50" />
+              {filteredProducts.map((product) => {
+                const currentImageIndex = currentImageIndices[product._id] || 0;
+                const hasMultipleImages = product.images?.length > 1;
+                
+                return (
+                  <div 
+                    key={product._id} 
+                    className="bg-white rounded-xl shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md cursor-pointer border border-gray-100"
+                    onClick={() => handleProductClick(product._id)}
+                  >
+                    {/* Featured badge */}
+                    {product.isFeatured && (
+                      <div className="absolute top-4 left-4 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full z-10">
+                        FEATURED
                       </div>
                     )}
-                  </div>
-                  
-                  {/* Product Info */}
-                  <div className="p-5">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="text-lg font-bold text-gray-900">{product.name}</h3>
-                        <p className="mt-1 text-sm text-gray-500 line-clamp-2">{product.description}</p>
-                      </div>
-                      <div className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full">
-                        {product.category.charAt(0).toUpperCase() + product.category.slice(1)}
-                      </div>
+                    
+                    {/* Product Image with Slideshow */}
+                    <div className="h-48 overflow-hidden relative group">
+                      {product.images?.length > 0 ? (
+                        <>
+                          <img 
+                            src={product.images[currentImageIndex].url} 
+                            alt={product.name} 
+                            className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                          />
+                          {hasMultipleImages && (
+                            <>
+                              <button 
+                                onClick={(e) => handlePrevImage(product._id, e)}
+                                className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                              >
+                                <FaChevronLeft />
+                              </button>
+                              <button 
+                                onClick={(e) => handleNextImage(product._id, e)}
+                                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                              >
+                                <FaChevronRight />
+                              </button>
+                              <div className="absolute bottom-2 left-0 right-0 flex justify-center space-x-1">
+                                {product.images.map((_, idx) => (
+                                  <div 
+                                    key={idx}
+                                    className={`h-1.5 w-1.5 rounded-full transition-all duration-200 ${currentImageIndex === idx ? 'bg-white w-3' : 'bg-white bg-opacity-50'}`}
+                                  />
+                                ))}
+                              </div>
+                            </>
+                          )}
+                        </>
+                      ) : product.imageUrl ? (
+                        <img 
+                          src={product.imageUrl} 
+                          alt={product.name} 
+                          className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
+                          <FaTag className="text-blue-500 text-4xl opacity-50" />
+                        </div>
+                      )}
                     </div>
                     
-                    <div className="mt-4 flex items-center justify-between">
-                      <div>
-                        <span className="text-xl font-bold text-gray-900">${product.startingPrice}</span>
+                    {/* Product Info */}
+                    <div className="p-5">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="text-lg font-bold text-gray-900">{product.title}</h3>
+                          <p className="mt-1 text-sm text-gray-500 line-clamp-2">{product.description}</p>
+                        </div>
+                        <div className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full">
+                          {product.category ? 
+                            product.category.charAt(0).toUpperCase() + product.category.slice(1)
+                            : 'Uncategorized'
+                          }
+                        </div>
                       </div>
                       
-                     
+                      <div className="mt-4 flex items-center justify-between">
+                        <div>
+                          <span className="text-xl font-bold text-gray-900">
+                            ${product.startingPrice?.toFixed(2) || '0.00'}
+                          </span>
+                        </div>
+                        <div className={`text-xs px-2 py-1 rounded-full ${
+                          product.status === 'active' 
+                            ? 'bg-green-100 text-green-800' 
+                            : product.status === 'sold'
+                              ? 'bg-purple-100 text-purple-800'
+                              : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {product.status.toUpperCase()}
+                        </div>
+                      </div>
                     </div>
-                    
-                    
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
             
             {/* Results count */}

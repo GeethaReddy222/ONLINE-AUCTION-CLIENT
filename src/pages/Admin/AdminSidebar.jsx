@@ -1,14 +1,10 @@
-import React, { useState } from 'react';
-import { NavLink } from 'react-router-dom';
-import {
-  FaHome,
-  FaUser,
-  FaBox,
-  FaUsers,
-  FaSignOutAlt,
-} from 'react-icons/fa';
+import React, { useState } from "react";
+import { NavLink } from "react-router-dom";
+import { FaHome, FaUser, FaBox, FaUsers, FaSignOutAlt } from "react-icons/fa";
+import { useNavigate } from 'react-router-dom';
 
 const AdminSidebar = () => {
+  const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
 
   const toggleCollapse = () => {
@@ -18,7 +14,7 @@ const AdminSidebar = () => {
   return (
     <div
       className={`bg-gradient-to-b from-[#2d3748] to-[#1a202c] text-white min-h-screen flex flex-col transition-all duration-300 ${
-        collapsed ? 'w-20' : 'w-64'
+        collapsed ? "w-20" : "w-64"
       }`}
     >
       {/* Sidebar Header */}
@@ -33,7 +29,6 @@ const AdminSidebar = () => {
             </h1>
           </div>
         )}
-        
       </div>
 
       {/* Navigation */}
@@ -42,11 +37,13 @@ const AdminSidebar = () => {
           to="/admin-dashboard"
           className={({ isActive }) =>
             `flex items-center px-6 py-4 transition-colors group ${
-              isActive ? 'bg-[#d4af37] text-white font-semibold' : 'hover:bg-[#2d3748]'
+              isActive
+                ? "bg-[#d4af37] text-white font-semibold"
+                : "hover:bg-[#2d3748]"
             }`
           }
         >
-          <FaHome className={`text-xl ${collapsed ? 'mx-auto' : 'mr-4'}`} />
+          <FaHome className={`text-xl ${collapsed ? "mx-auto" : "mr-4"}`} />
           {!collapsed && <span>Dashboard</span>}
         </NavLink>
 
@@ -54,11 +51,13 @@ const AdminSidebar = () => {
           to="/admin/profile"
           className={({ isActive }) =>
             `flex items-center px-6 py-4 transition-colors group ${
-              isActive ? 'bg-[#d4af37] text-white font-semibold' : 'hover:bg-[#2d3748]'
+              isActive
+                ? "bg-[#d4af37] text-white font-semibold"
+                : "hover:bg-[#2d3748]"
             }`
           }
         >
-          <FaUser className={`text-xl ${collapsed ? 'mx-auto' : 'mr-4'}`} />
+          <FaUser className={`text-xl ${collapsed ? "mx-auto" : "mr-4"}`} />
           {!collapsed && <span>Profile</span>}
         </NavLink>
 
@@ -66,11 +65,13 @@ const AdminSidebar = () => {
           to="/admin/pending-approvals"
           className={({ isActive }) =>
             `flex items-center px-6 py-4 transition-colors group ${
-              isActive ? 'bg-[#d4af37] text-white font-semibold' : 'hover:bg-[#2d3748]'
+              isActive
+                ? "bg-[#d4af37] text-white font-semibold"
+                : "hover:bg-[#2d3748]"
             }`
           }
         >
-          <FaBox className={`text-xl ${collapsed ? 'mx-auto' : 'mr-4'}`} />
+          <FaBox className={`text-xl ${collapsed ? "mx-auto" : "mr-4"}`} />
           {!collapsed && <span>Pending Products</span>}
         </NavLink>
 
@@ -78,11 +79,13 @@ const AdminSidebar = () => {
           to="/product/active-products"
           className={({ isActive }) =>
             `flex items-center px-6 py-4 transition-colors group ${
-              isActive ? 'bg-[#d4af37] text-white font-semibold' : 'hover:bg-[#2d3748]'
+              isActive
+                ? "bg-[#d4af37] text-white font-semibold"
+                : "hover:bg-[#2d3748]"
             }`
           }
         >
-          <FaBox className={`text-xl ${collapsed ? 'mx-auto' : 'mr-4'}`} />
+          <FaBox className={`text-xl ${collapsed ? "mx-auto" : "mr-4"}`} />
           {!collapsed && <span>Active Products</span>}
         </NavLink>
 
@@ -90,32 +93,25 @@ const AdminSidebar = () => {
           to="/admin/sold-products"
           className={({ isActive }) =>
             `flex items-center px-6 py-4 transition-colors group ${
-              isActive ? 'bg-[#d4af37] text-white font-semibold' : 'hover:bg-[#2d3748]'
+              isActive
+                ? "bg-[#d4af37] text-white font-semibold"
+                : "hover:bg-[#2d3748]"
             }`
           }
         >
-          <FaBox className={`text-xl ${collapsed ? 'mx-auto' : 'mr-4'}`} />
+          <FaBox className={`text-xl ${collapsed ? "mx-auto" : "mr-4"}`} />
           {!collapsed && <span>Sold Items</span>}
-        </NavLink>
-
-        <NavLink
-          to="/admin/users"
-          className={({ isActive }) =>
-            `flex items-center px-6 py-4 transition-colors group ${
-              isActive ? 'bg-[#d4af37] text-white font-semibold' : 'hover:bg-[#2d3748]'
-            }`
-          }
-        >
-          <FaUsers className={`text-xl ${collapsed ? 'mx-auto' : 'mr-4'}`} />
-          {!collapsed && <span>Manage Users</span>}
         </NavLink>
       </nav>
 
       {/* Sidebar Footer */}
       <div className="mt-auto border-t border-gray-700 p-4">
-        <button className="w-full flex items-center justify-center py-2 mb-5 px-4 bg-[#d4af37] hover:bg-[#b8972e] text-white font-medium rounded-lg transition-colors">
+        <button
+          onClick={() => navigate("/")} 
+          className="w-full flex items-center justify-center py-2 mb-5 px-4 bg-[#d4af37] hover:bg-[#b8972e] text-white font-medium rounded-lg transition-colors"
+        >
           {!collapsed && <FaSignOutAlt className="mr-2" />}
-          <span>{collapsed ? <FaSignOutAlt /> : 'Sign Out'}</span>
+          <span>{collapsed ? <FaSignOutAlt /> : "Sign Out"}</span>
         </button>
       </div>
     </div>

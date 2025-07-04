@@ -16,13 +16,13 @@ import {
 } from 'react-icons/fa';
 
 const Navbar = () => {
+  const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const location = useLocation();
   const navigate = useNavigate();
 
-  // Navigation items for Home page only
+  // Navigation items for Home page
   const homeNavItems = [
     { path: '/#hero', label: 'Home', icon: <FaHome className="mr-2" />, section: 'hero' },
     { path: '/#features', label: 'Features', icon: <FaHammer className="mr-2" />, section: 'features' },
@@ -87,6 +87,78 @@ const Navbar = () => {
     setIsOpen(false);
   };
 
+  // Simplified navbar for non-home pages
+  if (!isHomePage) {
+    return (
+      <nav className="bg-white shadow-sm py-4 px-6 md:px-12 flex justify-between items-center fixed top-0 left-0 right-0 z-50">
+        {/* Logo */}
+        <div className="flex items-center">
+          <div className="w-10 h-10 bg-[#2d3748] rounded-full flex items-center justify-center mr-3">
+            <FaGavel className="text-[#d4af37] text-xl" />
+          </div>
+          <h1 className="text-2xl font-bold text-[#2d3748]">
+            Prime<span className="text-[#d4af37]">Bid</span>
+          </h1>
+        </div>
+
+        {/* Desktop Navigation - Only Home and Logout */}
+        <div className="hidden md:flex items-center space-x-4">
+          <button
+            onClick={goHome}
+            className="flex items-center px-4 py-2 text-[#2d3748] hover:text-[#d4af37] transition-colors"
+          >
+            <FaHome className="mr-2" />
+            Home
+          </button>
+
+          {isAuthenticated && (
+            <button
+              onClick={handleLogout}
+              className="flex items-center bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-md transition-colors"
+            >
+              <FaSignOutAlt className="mr-2" />
+              Logout
+            </button>
+          )}
+        </div>
+
+        {/* Mobile Menu Toggle */}
+        <div className="md:hidden">
+          <button 
+            onClick={() => setIsOpen(!isOpen)} 
+            className="text-[#2d3748] focus:outline-none"
+          >
+            {isOpen ? <FaTimes className="text-2xl" /> : <FaBars className="text-2xl" />}
+          </button>
+        </div>
+
+        {/* Mobile Menu */}
+        {isOpen && (
+          <div className="absolute top-full left-0 w-full bg-white shadow-lg py-4 px-6 flex flex-col space-y-3 md:hidden z-40">
+            <button
+              onClick={goHome}
+              className="flex items-center py-3 px-4 rounded-md text-[#2d3748] hover:bg-[#f8f9fa] transition-colors"
+            >
+              <FaHome className="mr-2" />
+              Home
+            </button>
+
+            {isAuthenticated && (
+              <button
+                onClick={handleLogout}
+                className="flex items-center justify-center bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-4 rounded-md transition-colors"
+              >
+                <FaSignOutAlt className="mr-2" />
+                Logout
+              </button>
+            )}
+          </div>
+        )}
+      </nav>
+    );
+  }
+
+  // Full navbar for home page
   return (
     <nav className="bg-white shadow-sm py-4 px-6 md:px-12 flex justify-between items-center fixed top-0 left-0 right-0 z-50">
       {/* Logo */}
@@ -101,11 +173,11 @@ const Navbar = () => {
 
       {/* Desktop Navigation */}
       <div className="hidden md:flex items-center space-x-6">
-        {/* Always show Home button */}
+        {/* Home button */}
         <button
           onClick={goHome}
           className={`flex items-center px-4 py-2 rounded-md transition-colors ${
-            location.pathname === '/' 
+            location.hash === '#hero' || !location.hash
               ? 'text-[#d4af37] font-semibold' 
               : 'text-[#2d3748] hover:text-[#d4af37]'
           }`}
@@ -114,8 +186,8 @@ const Navbar = () => {
           Home
         </button>
 
-        {/* Home page specific navigation */}
-        {isHomePage && homeNavItems.slice(1).map((item) => (
+        {/* Home page navigation items */}
+        {homeNavItems.slice(1).map((item) => (
           <button
             key={item.path}
             onClick={() => handleSectionNavigation(item.section)}
@@ -131,9 +203,9 @@ const Navbar = () => {
         ))}
       </div>
 
-      {/* Auth Buttons - Fixed logic */}
+      {/* Auth Buttons */}
       <div className="hidden md:flex items-center space-x-4">
-        {/* Always show Logout when authenticated */}
+        {/* Logout when authenticated */}
         {isAuthenticated && (
           <button
             onClick={handleLogout}
@@ -144,10 +216,10 @@ const Navbar = () => {
           </button>
         )}
 
-        {/* Show Login/Register when not authenticated */}
+        {/* Login/Register when not authenticated */}
         {!isAuthenticated && (
           <>
-            {/* Show Login button everywhere except auth pages */}
+            {/* Login button */}
             {!isAuthPage && (
               <Link
                 to="/login"
@@ -162,53 +234,51 @@ const Navbar = () => {
               </Link>
             )}
 
-            {/* Show Register dropdown only on home page */}
-            {isHomePage && (
-              <div className="relative">
-                <button
-                  onClick={() => setIsRegisterOpen(!isRegisterOpen)}
-                  className={`flex items-center px-4 py-2 rounded-md transition-colors ${
-                    ['/customerregister', '/adminregister'].includes(location.pathname)
-                      ? 'bg-[#d4af37] text-white'
-                      : 'text-[#2d3748] hover:bg-[#f8f9fa]'
-                  }`}
+            {/* Register dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setIsRegisterOpen(!isRegisterOpen)}
+                className={`flex items-center px-4 py-2 rounded-md transition-colors ${
+                  ['/customerregister', '/adminregister'].includes(location.pathname)
+                    ? 'bg-[#d4af37] text-white'
+                    : 'text-[#2d3748] hover:bg-[#f8f9fa]'
+                }`}
+              >
+                <FaUserPlus className="mr-2" />
+                Register
+                <svg 
+                  className={`ml-2 h-4 w-4 transform transition-transform ${
+                    isRegisterOpen ? 'rotate-180' : ''
+                  }`} 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
                 >
-                  <FaUserPlus className="mr-2" />
-                  Register
-                  <svg 
-                    className={`ml-2 h-4 w-4 transform transition-transform ${
-                      isRegisterOpen ? 'rotate-180' : ''
-                    }`} 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              
+              {isRegisterOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
+                  <Link
+                    to="/customerregister"
+                    className="flex items-center px-4 py-2 text-[#2d3748] hover:bg-[#f8f9fa]"
+                    onClick={() => setIsRegisterOpen(false)}
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                
-                {isRegisterOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
-                    <Link
-                      to="/customerregister"
-                      className="flex items-center px-4 py-2 text-[#2d3748] hover:bg-[#f8f9fa]"
-                      onClick={() => setIsRegisterOpen(false)}
-                    >
-                      <FaUser className="mr-2 text-blue-600" />
-                      Customer
-                    </Link>
-                    <Link
-                      to="/adminregister"
-                      className="flex items-center px-4 py-2 text-[#2d3748] hover:bg-[#f8f9fa]"
-                      onClick={() => setIsRegisterOpen(false)}
-                    >
-                      <FaUserShield className="mr-2 text-purple-600" />
-                      Admin
-                    </Link>
-                  </div>
-                )}
-              </div>
-            )}
+                    <FaUser className="mr-2 text-blue-600" />
+                    Customer
+                  </Link>
+                  <Link
+                    to="/adminregister"
+                    className="flex items-center px-4 py-2 text-[#2d3748] hover:bg-[#f8f9fa]"
+                    onClick={() => setIsRegisterOpen(false)}
+                  >
+                    <FaUserShield className="mr-2 text-purple-600" />
+                    Admin
+                  </Link>
+                </div>
+              )}
+            </div>
           </>
         )}
       </div>
@@ -223,14 +293,14 @@ const Navbar = () => {
         </button>
       </div>
 
-      {/* Mobile Menu - Fixed structure */}
+      {/* Mobile Menu */}
       {isOpen && (
         <div className="absolute top-full left-0 w-full bg-white shadow-lg py-4 px-6 flex flex-col space-y-3 md:hidden z-40">
-          {/* Always show Home button */}
+          {/* Home button */}
           <button
             onClick={goHome}
             className={`flex items-center py-3 px-4 rounded-md transition-colors ${
-              location.pathname === '/'
+              location.hash === '#hero' || !location.hash
                 ? 'bg-[#d4af37] text-white'
                 : 'text-[#2d3748] hover:bg-[#f8f9fa]'
             }`}
@@ -239,8 +309,8 @@ const Navbar = () => {
             Home
           </button>
 
-          {/* Home page specific navigation */}
-          {isHomePage && homeNavItems.slice(1).map((item) => (
+          {/* Home page navigation items */}
+          {homeNavItems.slice(1).map((item) => (
             <button
               key={item.path}
               onClick={() => handleSectionNavigation(item.section)}
@@ -266,7 +336,7 @@ const Navbar = () => {
             </button>
           ) : (
             <>
-              {/* Show Login button everywhere except auth pages */}
+              {/* Login button */}
               {!isAuthPage && (
                 <Link
                   to="/login"
@@ -282,35 +352,33 @@ const Navbar = () => {
                 </Link>
               )}
 
-              {/* Show Register options only on home page */}
-              {isHomePage && (
-                <div className="flex flex-col space-y-2 mt-2">
-                  <Link
-                    to="/customerregister"
-                    onClick={() => setIsOpen(false)}
-                    className={`flex items-center py-3 px-4 rounded-md transition-colors ${
-                      location.pathname === '/customerregister'
-                        ? 'bg-[#d4af37] text-white'
-                        : 'text-[#2d3748] hover:bg-[#f8f9fa]'
-                    }`}
-                  >
-                    <FaUser className="mr-2" />
-                    Register as Customer
-                  </Link>
-                  <Link
-                    to="/adminregister"
-                    onClick={() => setIsOpen(false)}
-                    className={`flex items-center py-3 px-4 rounded-md transition-colors ${
-                      location.pathname === '/adminregister'
-                        ? 'bg-[#d4af37] text-white'
-                        : 'text-[#2d3748] hover:bg-[#f8f9fa]'
-                    }`}
-                  >
-                    <FaUserShield className="mr-2" />
-                    Register as Admin
-                  </Link>
-                </div>
-              )}
+              {/* Register options */}
+              <div className="flex flex-col space-y-2 mt-2">
+                <Link
+                  to="/customerregister"
+                  onClick={() => setIsOpen(false)}
+                  className={`flex items-center py-3 px-4 rounded-md transition-colors ${
+                    location.pathname === '/customerregister'
+                      ? 'bg-[#d4af37] text-white'
+                      : 'text-[#2d3748] hover:bg-[#f8f9fa]'
+                  }`}
+                >
+                  <FaUser className="mr-2" />
+                  Register as Customer
+                </Link>
+                <Link
+                  to="/adminregister"
+                  onClick={() => setIsOpen(false)}
+                  className={`flex items-center py-3 px-4 rounded-md transition-colors ${
+                    location.pathname === '/adminregister'
+                      ? 'bg-[#d4af37] text-white'
+                      : 'text-[#2d3748] hover:bg-[#f8f9fa]'
+                  }`}
+                >
+                  <FaUserShield className="mr-2" />
+                  Register as Admin
+                </Link>
+              </div>
             </>
           )}
         </div>
